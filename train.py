@@ -41,6 +41,8 @@ def main(args):
     encoder = EncoderCNN(args.embed_size).to(device)
     decoder = DecoderRNN(args.embed_size, args.hidden_size, len(vocab), args.num_layers).to(device)
 
+    # TODO: should be done `model.train()`
+
     # Loss and optimizer
     criterion = nn.CrossEntropyLoss()
     params = list(decoder.parameters()) + list(encoder.linear.parameters()) + list(encoder.bn.parameters())
@@ -49,10 +51,12 @@ def main(args):
     # Train the models
     total_step = len(data_loader)
     for epoch in range(args.num_epochs):
+        # TODO: add `tqdm`
         for i, (images, captions, lengths) in enumerate(data_loader):
 
             # Set mini-batch dataset
             images = images.to(device)
+            # TODO: what is the problem with length==cpu and captions==cuda
             captions = captions.to(device)
             targets = pack_padded_sequence(captions, lengths, batch_first=True)[0]
 
@@ -60,11 +64,13 @@ def main(args):
             features = encoder(images)
             outputs = decoder(features, captions, lengths)
             loss = criterion(outputs, targets)
+            # TODO: optimizer.zero_grad() instead off decoder/encoder
             decoder.zero_grad()
             encoder.zero_grad()
             loss.backward()
             optimizer.step()
 
+            # TODO: use `tqdm`
             # Print log info
             if i % args.log_step == 0:
                 print('Epoch [{}/{}], Step [{}/{}], Loss: {:.4f}, Perplexity: {:5.4f}'
@@ -72,6 +78,7 @@ def main(args):
 
         # Save the model checkpoints
         #if  (epoch + 1) % args.save_step == 0:
+        # TODO: save dict(decoder=decoder.state_dict(), encoder=encoder.state_dict())
         print('saving weights')
         torch.save(decoder.state_dict(), os.path.join(
             args.model_path, 'decoder-epoch-{}-loss-{}.ckpt'.format(epoch + 1, loss)))

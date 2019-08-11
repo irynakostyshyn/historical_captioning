@@ -21,11 +21,11 @@ class Flickr8k(object):
         self.annotation = get_captions(annotation)
         self.transform = transform
         self.vocab = vocab
+        # TODO: naming of variables
         self.imgs = list(set(open(train_img, 'r').read().strip().split('\n')))
         self.captions = {}
         print(len(self.imgs))
         for img in self.imgs:
-            
             self.captions[img] = self.annotation[img]
 
     def __getitem__(self, idx):
@@ -33,6 +33,7 @@ class Flickr8k(object):
         caption = self.captions[self.imgs[idx]]
 
         img = self.imgs[idx]
+        # TODO: use `os.path.join` inplace here
         path = get_full_path_to_img(self.root, img)
         vocab = self.vocab
         
@@ -84,12 +85,15 @@ def collate_fn(data):
 
 
 def get_captions(annotations):
+    # TODO: bad variable name
     captions_tmp = open(annotations, 'r').read().strip().split('\n')
 
     captions = {}
     for row in captions_tmp:
         title = row.split("^")[0]
+        # TODO: could be bug here, join all after first index
         text = row.split("^")[1]
+        # TODO: use collections.defaultdict(list)
         if not (title in captions):
             captions[title] = []
 
@@ -97,6 +101,7 @@ def get_captions(annotations):
     return captions
 
 
+# TODO: fix naming of variable `ann`
 def get_loader(root, ann, vocab, train_img, transform, batch_size, shuffle, num_workers):
 
     data = Flickr8k(root=root, annotation=ann, vocab=vocab, train_img=train_img, transform=transform)

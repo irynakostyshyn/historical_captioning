@@ -6,11 +6,12 @@ from torch.nn.utils.rnn import pack_padded_sequence
 
 class EncoderCNN(nn.Module):
     def __init__(self, embed_size):
-
         super(EncoderCNN, self).__init__()
+
         model = models.resnet152(pretrained=True)
         modules = list(model.children())[:-1]
         self.model = nn.Sequential(*modules)
+        # TODO: separate into the other Sequential with readable name
         self.linear = nn.Linear(model.fc.in_features, embed_size)
         self.bn = nn.BatchNorm1d(embed_size, momentum=0.01)
 
@@ -25,8 +26,8 @@ class EncoderCNN(nn.Module):
 
 class DecoderRNN(nn.Module):
     def __init__(self, embed_size, hidden_size, vocab_size, num_layers, max_seq_length=20):
-
         super(DecoderRNN, self).__init__()
+
         self.embed = nn.Embedding(vocab_size, embed_size)
         self.lstm = nn.LSTM(embed_size, hidden_size, num_layers, batch_first=True)
         self.linear = nn.Linear(hidden_size, vocab_size)

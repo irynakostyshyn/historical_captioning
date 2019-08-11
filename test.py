@@ -29,6 +29,7 @@ def load_image(image_path, transform=None):
 def test(image_path, decoder_path, encoder_path, vocab_path, embed_size, hidden_size, num_layers):
     # Image preprocessing
     transform = transforms.Compose([
+        # TODO: size should be in hyperparameter
         transforms.Resize((298, 298)),
 
         transforms.ToTensor(),
@@ -56,6 +57,7 @@ def test(image_path, decoder_path, encoder_path, vocab_path, embed_size, hidden_
     # Generate an caption from the image
     feature = encoder(image_tensor)
     sampled_ids = decoder.sample(feature)
+    # TODO: explain why again here we choose `[0]` and do this inside `sample` method
     sampled_ids = sampled_ids[0].cpu().numpy()  # (1, max_seq_length) -> (max_seq_length)
 
     # Convert word_ids to words
@@ -68,6 +70,7 @@ def test(image_path, decoder_path, encoder_path, vocab_path, embed_size, hidden_
     sentence = ' '.join(sampled_caption)
 
     # Print out the image and the generated caption
+    # TODO: print should be out of the function
     print(sentence)
     return sentence
     # image = Image.open(args.image)

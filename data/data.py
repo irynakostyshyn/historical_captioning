@@ -11,30 +11,28 @@ import torchvision
 import argparse
 import os
 import numpy as np
+from collections import defaultdict
 import torch
 from PIL import Image
 
 
-class Flickr8k(object):
+class DataSet(object):
     def __init__(self, root, annotation, vocab, train_img,  transform):
         self.root = root
         self.annotation = get_captions(annotation)
         self.transform = transform
         self.vocab = vocab
-        # TODO: naming of variables
-        self.imgs = list(set(open(train_img, 'r').read().strip().split('\n')))
+        self.images_path = list(set(open(train_img, 'r').read().strip().split('\n')))
         self.captions = {}
-        print(len(self.imgs))
-        for img in self.imgs:
+        print(len(self.images_path))
+        for img in self.images_path:
             self.captions[img] = self.annotation[img]
 
     def __getitem__(self, idx):
 
-        caption = self.captions[self.imgs[idx]]
-
-        img = self.imgs[idx]
-        # TODO: use `os.path.join` inplace here
-        path = get_full_path_to_img(self.root, img)
+        caption = self.captions[self.images_path[idx]]
+        img = self.images_path[idx]
+        path = os.path.join(self.root, img)
         vocab = self.vocab
         
         try:
@@ -49,7 +47,7 @@ class Flickr8k(object):
         tokens = nltk.tokenize.word_tokenize(' '.join(caption).lower())
         caption = []
         caption.append(vocab('<start>'))
-        #caption.extend([vocab(token) for token in tokens])
+
         for token in tokens:
             
             caption.append(vocab(token))
@@ -60,11 +58,7 @@ class Flickr8k(object):
         return image, target
 
     def __len__(self):
-        return len(self.imgs)
-
-
-def get_full_path_to_img(root, img_title):
-    return root + img_title
+        return len(self.images_path)
 
 
 def collate_fn(data):
@@ -85,26 +79,22 @@ def collate_fn(data):
 
 
 def get_captions(annotations):
-    # TODO: bad variable name
-    captions_tmp = open(annotations, 'r').read().strip().split('\n')
 
-    captions = {}
-    for row in captions_tmp:
-        title = row.split("^")[0]
-        # TODO: could be bug here, join all after first index
-        text = row.split("^")[1]
-        # TODO: use collections.defaultdict(list)
-        if not (title in captions):
-            captions[title] = []
+    caption_annotations = open(annotations, 'r').read().strip().split('\n')
+    captions = defaultdict(list)
+    for row in caption_annotations:
+        title_text = row.split("^")
+        title = title_text[0]
+
+        text = '^'.join(title_text[1:])
 
         captions[title].append(text)
     return captions
 
 
-# TODO: fix naming of variable `ann`
-def get_loader(root, ann, vocab, train_img, transform, batch_size, shuffle, num_workers):
+def get_loader(root, annotation, vocab, train_img, transform, batch_size, shuffle, num_workers):
 
-    data = Flickr8k(root=root, annotation=ann, vocab=vocab, train_img=train_img, transform=transform)
+    data = DataSet(root=root, annotation=annotation, vocab=vocab, train_img=train_img, transform=transform)
 
     data_loader = torch.utils.data.DataLoader(dataset=data,
                                               batch_size=batch_size,

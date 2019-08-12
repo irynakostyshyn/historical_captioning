@@ -11,16 +11,18 @@ class EncoderCNN(nn.Module):
         model = models.resnet152(pretrained=True)
         modules = list(model.children())[:-1]
         self.model = nn.Sequential(*modules)
-        # TODO: separate into the other Sequential with readable name
-        self.linear = nn.Linear(model.fc.in_features, embed_size)
-        self.bn = nn.BatchNorm1d(embed_size, momentum=0.01)
+        self.classifier = torch.nn.Sequential(
+            nn.Linear(model.fc.in_features, embed_size),
+            nn.BatchNorm1d(embed_size, momentum=0.01)
+        )
+
 
     def forward(self, images):
 
         with torch.no_grad():
             features = self.model(images)
         features = features.reshape(features.size(0), -1)
-        features = self.bn(self.linear(features))
+        features = self.classifier(features)
         return features
 
 
@@ -55,5 +57,5 @@ class DecoderRNN(nn.Module):
             inputs = inputs.unsqueeze(1)
         sampled_ids = torch.stack(sampled_ids, 1)
 
-        return sampled_ids
+        return sampled_ids[0]
 
